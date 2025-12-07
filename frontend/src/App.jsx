@@ -1,33 +1,31 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { 
+  Mic, Send, Volume2, BookOpen, Heart, Flame, 
+  LayoutDashboard, MessageCircle, Award, Settings, 
+  User, CheckCircle, AlertTriangle, Menu, X, 
+  Star, Lock, MapPin, Zap, ChevronRight, Trophy, Crown,
+  Bell, LogOut, Globe, Edit3, ArrowLeft, Check, Play,
+  Circle, CheckSquare, MoreHorizontal, Moon, Sun,
+  Mail, Key, UserPlus, Baby, Smile, Briefcase, Plane, GraduationCap,
+  Music, Target, BookA, Sparkles, Footprints, Headphones,
+  Utensils, ShoppingBag, Save, Camera, Loader2, Languages
+} from 'lucide-react';
 import './App.css'
+import AuthView from './components/LoginSignup';
+import OnboardingView from './components/Onboarding';
+import DashboardView from './components/Dashboard';
+import LearnView from './components/LearnView';
+import LessonView from './components/LessonView';
 
 function App() {
-  const [count, setCount] = useState(0)
+  
 
   return (
     <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+      {/* <AuthView/> */}
+      {/* <OnboardingView/> */}
+      {/* <DashboardView /> */}
+      {/* <LearnView /> */}
+      <LessonView />
     </>
   )
 }
