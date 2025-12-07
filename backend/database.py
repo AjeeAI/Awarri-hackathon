@@ -1,32 +1,27 @@
-import jwt 
+from sqlalchemy import create_engine, text
+from sqlalchemy.orm import sessionmaker
 from dotenv import load_dotenv
-from datetime import datetime, timedelta
-from fastapi import Request
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from fastapi import Security
-
-bearer = HTTPBearer()
-
+from sqlalchemy import text
+import os
 load_dotenv()
 
-secret_key = os.getenv("secret_key")
 
-def create_token(details: dict, expiry: int):
-    expire = datetime.now() + timedelta(minutes=expiry)
-    
-    details.update({"exp": expire})
-    
-    encoded_jwt = jwt.encode(details, secret_key)
-    return encoded_jwt
+db_url = f"mysql+pymysql://{os.getenv('dbuser')}:{os.getenv('dbpassword')}@{os.getenv('dbhost')}:{os.getenv('dbport')}/{os.getenv('dbname')}"
 
-def verify_token(request: HTTPAuthorizationCredentials = Security(bearer)):
-    token = request.credentials
-    
-    verified_token = jwt.decode(token, secret_key, algorithms=["HS256"])
-    
-    print(verified_token)
-    
-    return {
-        "email": verified_token.get("email"),
-        "username": verified_token["username"]
-    }
+engine = create_engine(
+    db_url
+)
+
+session = sessionmaker(bind=engine)
+db = session()
+create_users_table = text("""
+CREATE TABLE IF NOT EXISTS users(
+    id int AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL,
+    password VARCHAR(100) NOT NULL
+);                       
+                          """)
+
+db.execute(create_users_table)
+print("User table created successfully")
