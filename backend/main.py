@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi import HTTPException, Depends
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from dotenv import load_dotenv
 from sqlalchemy import text
@@ -11,6 +12,13 @@ load_dotenv()
 
 app = FastAPI(title = "Awarri hackathon", version = "1.0.0")
 
+app.add_middleware(
+    CORSMiddleware,
+ allow_origins = ["*"],
+ allow_headers = ["*"],
+ allow_methods = ["*"],
+ allow_credentials = True
+)
 token_time = int(os.getenv("token_time"))
 
 @app.get("/")
@@ -20,7 +28,7 @@ def home():
 
 class User(BaseModel):
     email: str = Field(..., example="adesanya@gmail.com")
-    username: str = Field(..., example="Inioluwa Adesanya")
+    name: str = Field(..., example="Inioluwa Adesanya")
     password: str = Field(..., example = "Hediot01")
 @app.post("/signup")
 def signup(user: User):
@@ -33,12 +41,12 @@ def signup(user: User):
                     VALUES (:name, :email, :password)
                     """)
         
-        db.execute(query, {"name": user.username, "email": user.email, "password": hashedPassword})
+        db.execute(query, {"name": user.name, "email": user.email, "password": hashedPassword})
         
         db.commit()
         
         return {"message": "User created",
-                "data": {"name": user.username, "email": user.email}}
+                "data": {"name": user.name, "email": user.email}}
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

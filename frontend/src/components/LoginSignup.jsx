@@ -1,23 +1,58 @@
 import { useState } from "react";
-import {  
-  User, ChevronRight, Mail, Key, Loader2, 
+import { 
+  User, ChevronRight, Mail, Key, Loader2, AlertCircle 
 } from 'lucide-react';
+import { useNavigate } from "react-router-dom";
 
+// Best Practice: Use environment variables for API URLs
+const API_URL = "http://127.0.0.1:8000";
 
-const AuthView = ({ onAuthSuccess }) => {
+const AuthView = () => {
+  const navigate = useNavigate();
   const [isSignup, setIsSignup] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [formData, setFormData] = useState({ email: '', password: '', name: '' });
+  const [error, setError] = useState(""); 
+  const [formData, setFormData] = useState({ 
+    email: '', 
+    password: '', 
+    name: '' 
+  });
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e) => {
+    
+    e.preventDefault(); 
     setIsLoading(true);
+    setError("");
+
     try {
-      const response = await (isSignup ? authService.signup(formData) : authService.login(formData));
-      const token = response.token;
-      const user = response.user || { name: formData.name, id: response.userId };
-      onAuthSuccess(isSignup, token, user);
-    } catch (e) {
-      console.error(e);
+      const endpoint = isSignup ? "/signup" : "/login";
+      
+      const response = await fetch(`${API_URL}${endpoint}`, {
+        method: 'POST', 
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData), 
+      });
+
+      
+      const data = await response.json();
+
+      
+      if (!response.ok) {
+        throw new Error(data.detail || "Authentication failed");
+      }   
+
+     
+      localStorage.setItem("token", data.access_token || data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+
+      navigate("/onboarding");
+
+    } catch (err) {
+      console.error(err);
+     
+      setError(err.message || "Something went wrong. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -31,15 +66,34 @@ const AuthView = ({ onAuthSuccess }) => {
                 <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">N-ATLaS</h1>
                 <p className="text-slate-500 dark:text-slate-400">Your gateway to Nigerian languages.</p>
             </div>
+            
             <div className="bg-white dark:bg-slate-900 p-8 rounded-3xl shadow-xl border border-slate-100 dark:border-slate-800">
-                <h2 className="text-xl font-bold mb-6 text-slate-800 dark:text-white">{isSignup ? 'Create Account' : 'Welcome Back'}</h2>
-                <div className="space-y-4">
+                <h2 className="text-xl font-bold mb-6 text-slate-800 dark:text-white">
+                  {isSignup ? 'Create Account' : 'Welcome Back'}
+                </h2>
+
+                {/* Error Banner */}
+                {error && (
+                  <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-xl text-sm flex items-center gap-2">
+                    <AlertCircle size={16} />
+                    {error}
+                  </div>
+                )}
+
+                
+                <form onSubmit={handleSubmit} className="space-y-4">
                     {isSignup && (
                         <div>
                             <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Full Name</label>
                             <div className="relative">
                                 <User className="absolute left-3 top-3 text-slate-400" size={20} />
-                                <input type="text" onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-green-500 transition-all dark:text-white" placeholder="John Doe" />
+                                <input 
+                                  type="text" 
+                                  required
+                                  onChange={(e) => setFormData({...formData, name: e.target.value})} 
+                                  className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-green-500 transition-all dark:text-white" 
+                                  placeholder="John Doe" 
+                                />
                             </div>
                         </div>
                     )}
@@ -47,24 +101,49 @@ const AuthView = ({ onAuthSuccess }) => {
                         <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Email Address</label>
                         <div className="relative">
                             <Mail className="absolute left-3 top-3 text-slate-400" size={20} />
-                            <input type="email" onChange={(e) => setFormData({...formData, email: e.target.value})} className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-green-500 transition-all dark:text-white" placeholder="you@example.com" />
+                            <input 
+                              type="email" 
+                              required
+                              onChange={(e) => setFormData({...formData, email: e.target.value})} 
+                              className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-green-500 transition-all dark:text-white" 
+                              placeholder="you@example.com" 
+                            />
                         </div>
                     </div>
                     <div>
                         <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Password</label>
                         <div className="relative">
                             <Key className="absolute left-3 top-3 text-slate-400" size={20} />
-                            <input type="password" onChange={(e) => setFormData({...formData, password: e.target.value})} className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-green-500 transition-all dark:text-white" placeholder="••••••••" />
+                            <input 
+                              type="password" 
+                              required
+                              onChange={(e) => setFormData({...formData, password: e.target.value})} 
+                              className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-green-500 transition-all dark:text-white" 
+                              placeholder="••••••••" 
+                            />
                         </div>
                     </div>
-                    <button onClick={handleSubmit} disabled={isLoading} className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-xl shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2">
+                    
+                    <button 
+                      type="submit" 
+                      disabled={isLoading} 
+                      className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-xl shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
+                    >
                         {isLoading ? <Loader2 className="animate-spin" /> : <>{isSignup ? 'Sign Up' : 'Log In'} <ChevronRight size={20} /></>}
                     </button>
-                </div>
+                </form>
+
                 <div className="mt-6 text-center">
                     <p className="text-sm text-slate-500">
                         {isSignup ? 'Already have an account?' : "Don't have an account?"} 
-                        <button onClick={() => setIsSignup(!isSignup)} className="ml-2 font-bold text-green-600 hover:underline">
+                        <button 
+                          type="button"
+                          onClick={() => {
+                            setError("");
+                            setIsSignup(!isSignup);
+                          }} 
+                          className="ml-2 font-bold text-green-600 hover:underline"
+                        >
                             {isSignup ? 'Log In' : 'Sign Up'}
                         </button>
                     </p>

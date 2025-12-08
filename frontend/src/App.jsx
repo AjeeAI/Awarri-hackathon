@@ -15,18 +15,24 @@ import OnboardingView from './components/Onboarding';
 import DashboardView from './components/Dashboard';
 import LearnView from './components/LearnView';
 import LessonView from './components/LessonView';
+import { Route, Routes } from 'react-router-dom';
 
 function App() {
   
 
   return (
-    <>
+    <div>
+      <Routes>
+        <Route path='/' element={<AuthView/>}/>
+        <Route path='/onboarding' element={<OnboardingView/>}/>
+      </Routes>
+
       {/* <AuthView/> */}
       {/* <OnboardingView/> */}
       {/* <DashboardView /> */}
       {/* <LearnView /> */}
-      <LessonView />
-    </>
+      {/* <LessonView /> */}
+    </div>
   )
 }
 
