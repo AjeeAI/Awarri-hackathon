@@ -4,15 +4,15 @@ import {
 } from 'lucide-react';
 
 
-const AuthView = ({ onAuthSuccess }) => {
-  const [isSignup, setIsSignup] = useState(false);
+const SignUp = ({ onAuthSuccess }) => {
+//   const [isSignup, setIsSignup] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({ email: '', password: '', name: '' });
 
   const handleSubmit = async () => {
     setIsLoading(true);
     try {
-      const response = await (isSignup ? authService.signup(formData) : authService.login(formData));
+     const response = await fetch()
       const token = response.token;
       const user = response.user || { name: formData.name, id: response.userId };
       onAuthSuccess(isSignup, token, user);
@@ -75,4 +75,4 @@ const AuthView = ({ onAuthSuccess }) => {
   );
 };
 
-export default AuthView;
+export default SignUp;
