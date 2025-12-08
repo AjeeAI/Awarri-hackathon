@@ -30,7 +30,7 @@ def signup(user: User):
         print(hashedPassword)
         query = text("""
                     INSERT INTO users (name, email, password)
-                    (:name, :email, :password)
+                    VALUES (:name, :email, :password)
                     """)
         
         db.execute(query, {"name": user.username, "email": user.email, "password": hashedPassword})
@@ -53,7 +53,7 @@ def login(user: Login):
      SELECT * FROM users WHERE email = :email                
                      """)
         
-        result = db.execute(query, {"email": input.email}).mappings().fetchone()
+        result = db.execute(query, {"email": user.email}).mappings().fetchone()
         stored_password = result["password"]
         
         if not result:
