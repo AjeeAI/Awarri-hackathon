@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 // Best Practice: Use environment variables for API URLs
 const API_URL = "http://127.0.0.1:8000";
 
-const AuthView = () => {
+const AuthView = ({setIsLoggedIn}) => {
   const navigate = useNavigate();
   const [isSignup, setIsSignup] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -47,7 +47,15 @@ const AuthView = () => {
       localStorage.setItem("token", data.access_token || data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
 
-      navigate("/onboarding");
+      if (isSignup) {
+        navigate("/onboarding");
+
+      } else {
+      navigate("/dashboard");
+      setIsLoggedIn(true);
+    }
+      // isSignup? navigate("/onboarding"): navigate("/dashboard"); 
+      
 
     } catch (err) {
       console.error(err);
