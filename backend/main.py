@@ -8,6 +8,7 @@ import bcrypt
 from middleware import create_token, verify_token
 from database import db
 import os
+from onboarding import router as onboarding_router
 load_dotenv()
 
 app = FastAPI(title = "Awarri hackathon", version = "1.0.0")
@@ -82,3 +83,4 @@ def login(user: Login):
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+app.include_router(onboarding_router, prefix="/api")

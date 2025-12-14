@@ -28,6 +28,7 @@ def verify_token(request: HTTPAuthorizationCredentials = Security(bearer)):
     print(verified_token)
     
     return {
+        "id": verified_token["id"],
         "email": verified_token.get("email"),
-        "username": verified_token["username"]
+        "username": verified_token["name"]
     }
