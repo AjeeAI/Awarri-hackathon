@@ -11,11 +11,15 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.17",
-    "lucide-react": "^0.555.0",
+    "lucide-react": "^0.556.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+<<<<<<< HEAD
     "react-router-dom": "^7.10.1",
     "tailwindcss": "^4.1.17"
+=======
+    "react-router-dom": "^7.10.0"
+>>>>>>> d2a18a6d17122d00edfe0ba8848a96ad96fc04ad
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
