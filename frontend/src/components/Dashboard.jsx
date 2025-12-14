@@ -6,6 +6,7 @@ import QuestItem from './QuestItem';
 import PracticeCard from './PracticeCard';
 
 const DashboardView = ({ onStart, userLang }) => (
+    
     <div className="flex-1 overflow-y-auto min-h-screen p-4 md:p-8 bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
         <div className="w-full">
             <div className="flex justify-between items-end mb-8">

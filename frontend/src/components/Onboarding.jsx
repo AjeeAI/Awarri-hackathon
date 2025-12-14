@@ -27,6 +27,14 @@ const OnboardingView = ({ onFinish }) => {
     else if (current.length < 3) updateData('motivations', [...current, mot]);
   };
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const response = await fetch("http://127.0.0.1:8000/api/onboarding", {
+        method: "POST",
+        headers
+
+    })
+  }
   const renderStep = () => {
     switch (step) {
       case 1: return (

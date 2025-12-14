@@ -9,59 +9,54 @@ const AITutor = () => {
   const [inputText, setInputText] = useState('');
   const [isTalking, setIsTalking] = useState(false);
   const [isSending, setIsSending] = useState(false);
+  
+  // State to hold the chat history
+  const [messages, setMessages] = useState([
+    {
+      id: 1,
+      sender: 'ai',
+      text: "Good morning. I have very beautiful lace. What do you want to buy?",
+      language: "Yoruba",
+      translation: 'E kaaro o! Mo ni lace to rewa gan. Ki le fe ra?',
+    }
+  ]);
 
-  // 1. Ref to hold the Speech Recognition instance
+  // Ref to hold the Speech Recognition instance
   const recognitionRef = useRef(null);
 
-  // 2. Initialize Speech Logic on Mount
-  useEffect(() => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  // Initialize Speech Logic on Mount
+  // useEffect(() => {
+  //   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     
-    if (SpeechRecognition) {
-      recognitionRef.current = new SpeechRecognition();
-      recognitionRef.current.lang = 'en-US';
-      
-      // 1. KEY CHANGE: Keep listening even after pauses
-      recognitionRef.current.continuous = true; 
-      
-      // 2. Keep interim results true so you see words as you speak
-      recognitionRef.current.interimResults = true;
+  //   if (SpeechRecognition) {
+  //     recognitionRef.current = new SpeechRecognition();
+  //     recognitionRef.current.lang = 'en-US';
+  //     recognitionRef.current.continuous = true; 
+  //     recognitionRef.current.interimResults = true;
 
-      recognitionRef.current.onresult = (event) => {
-        // When 'continuous' is true, event.results contains ALL snippets since starting
-        // We want to join them all together
-        const transcript = Array.from(event.results)
-          .map(result => result[0].transcript)
-          .join('');
-        
-        setInputText(transcript);
-      };
+  //     recognitionRef.current.onresult = (event) => {
+  //       const transcript = Array.from(event.results)
+  //         .map(result => result[0].transcript)
+  //         .join('');
+  //       setInputText(transcript);
+  //     };
 
-      // 3. Handling the "End" event intelligently
-      recognitionRef.current.onend = () => {
-        // If the user clicked "Stop", isTalking will be false (handled in handleTalk)
-        // But if the browser stopped it unexpectedly (network glitch), we might want to restart it.
-        
-        // For now, we'll trust the state. If React thinks we should be talking, 
-        // but the browser stopped, we can try to restart (Auto-restart logic).
-        // However, a simpler approach is to just respect the stop:
-        setIsTalking(false);
-      };
+  //     recognitionRef.current.onend = () => {
+  //       setIsTalking(false);
+  //     };
 
-      recognitionRef.current.onerror = (event) => {
-        console.error("Speech Error:", event.error);
-        // Ignore "no-speech" errors as they just mean the user was quiet
-        if (event.error !== 'no-speech') {
-            setIsTalking(false);
-        }
-      };
-    }
+  //     recognitionRef.current.onerror = (event) => {
+  //       if (event.error !== 'no-speech') {
+  //           setIsTalking(false);
+  //       }
+  //     };
+  //   }
 
-    return () => {
-      if (recognitionRef.current) recognitionRef.current.stop();
-    };
-  }, []);
-  // 3. Updated Handle Talk to trigger the engine
+  //   return () => {
+  //     if (recognitionRef.current) recognitionRef.current.stop();
+  //   };
+  // }, []);
+
   const handleTalk = () => {
     if (!recognitionRef.current) {
         alert("Speech recognition not supported in this browser.");
@@ -70,7 +65,8 @@ const AITutor = () => {
 
     if (!isTalking) {
       try {
-        recognitionRef.current.start();
+        // Mic is activated here
+        // recognitionRef.current.start();
         setIsTalking(true);
       } catch (err) {
         console.error("Mic already active");
@@ -81,58 +77,83 @@ const AITutor = () => {
     }
   };
 
-  const [messages, setMessages] = useState([
-    {
-      id: 1,
-      sender: 'ai',
-      text: "Good morning. I have very beautiful lace. What do you want to buy?",
-      language: "Yoruba",
-      translation: 'E kaaro o! Mo ni lace to rewa gan. Ki le fe ra?',
-      audioPlayed: false
-    }
-  ]);
+  const handleSpeak = async (text, language) => {
+    try {
+      const response = await fetch("https://8000-01kbncv6hstyfzvadn6zffk7f9.cloudspaces.litng.ai/english_translator_voice", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          // CHANGE THIS LINE:
+          user_prompt: text,   // Backend expects 'user_prompt', not 'text'
+          language: language
+        })
+      });
 
-  const [translation, setTranslation] = useState([])
+      if (!response.ok) throw new Error("Audio fetch failed");
+
+      // Convert response to audio blob and play it
+      const audioBlob = await response.blob();
+      const audioUrl = URL.createObjectURL(audioBlob);
+      const audio = new Audio(audioUrl);
+      audio.play();
+
+    } catch (error) {
+      console.error("Speech Error:", error);
+    }
+  };
 
   const handleSend = async (e) => {
     e.preventDefault();
-    setIsSending(true);
     if (!inputText.trim()) return;
 
-    // Add user message
-    const newMessage = {
-      id: messages.length + 1,
+    setIsSending(true);
+
+    // 1. Add User Message (Right side)
+    const userMessage = {
+      id: Date.now(),
       sender: 'user',
       text: inputText,
-      translation: translation
+      translation: null 
     };
 
-    setMessages([...messages, newMessage]);
-
-    const response = await fetch('https://bfbe82c3ccbf.ngrok-free.app/english_translator', {
-      method: 'POST', 
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      // 3. The body MUST match your Pydantic "DefinePrompt" class
-      body: JSON.stringify({
-        user_prompt: "Text you want to translate", // This matches 'user_prompt' in Python
-        language: "Yoruba"                         // This matches 'language' in Python
-      })
-    });
-    if (!response.ok){
-      return "Failed to access translator";
-    }
+    setMessages(prev => [...prev, userMessage]);
+    
+    const currentInput = inputText;
+    setInputText(''); 
 
     try {
-      data = await response.json();
-      setTranslation(data);
-    } 
-    catch (e) {
-      console.log(e);
+        const response = await fetch('https://8000-01kbncv6hstyfzvadn6zffk7f9.cloudspaces.litng.ai/english_translator', {
+          method: 'POST', 
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            user_prompt: currentInput, 
+            language: "Yoruba" 
+          })
+        });
+    
+        if (!response.ok) {
+          throw new Error("Failed to access translator");
+        }
+    
+        const data = await response.json();
+        
+        // 2. Add AI Response (Left side) containing the translation
+        const aiMessage = {
+            id: Date.now() + 1, 
+            sender: 'ai',       
+            text: data.Translation, // The translation text
+            language: "Yoruba"
+        };
+
+        setMessages(prev => [...prev, aiMessage]);
+
+    } catch (error) {
+        console.error("Translation Error:", error);
+    } finally {
+        setIsSending(false);
     }
-    setInputText('');
-    setIsSending(false);
   };
 
   return (
@@ -156,7 +177,6 @@ const AITutor = () => {
                 key={msg.id} 
                 className={`flex flex-col max-w-2xl ${msg.sender === 'user' ? 'ml-auto items-end' : 'mr-auto items-start'}`}
             >
-                {/* Message Bubble */}
                 <div className={`p-5 rounded-2xl relative shadow-lg
                     ${msg.sender === 'user' 
                         ? 'bg-green-600 text-white rounded-br-sm' 
@@ -166,19 +186,16 @@ const AITutor = () => {
                     <p className="text-lg font-medium leading-relaxed">
                         {msg.text}
                     </p>
-                    
-                    {/* Translation (Only for AI usually) */}
-                    {msg.translation && (
-                        <p className="mt-3 text-slate-400 text-sm italic font-light border-t border-slate-700/50 pt-2">
-                            "{msg.translation}"
-                        </p>
-                    )}
                 </div>
 
-                {/* Audio / Actions Row */}
+                {/* --- FIXED: Audio Button --- */}
                 {msg.sender === 'ai' && (
                     <button className="mt-2 ml-1 text-slate-500 hover:text-green-400 transition-colors p-2 hover:bg-slate-800 rounded-full">
-                        <Volume2 size={20} />
+                        <Volume2 
+                            size={20} 
+                            // CORRECTED LINE BELOW:
+                            onClick={() => handleSpeak(msg.text, msg.language || "Yoruba")}
+                        />
                     </button>
                 )}
             </div>
@@ -191,7 +208,6 @@ const AITutor = () => {
             onSubmit={handleSend}
             className="max-w-4xl mx-auto flex items-center gap-4"
         >
-            {/* Mic Button */}
             <button 
                 type="button"
                 className={`w-12 h-12 flex items-center justify-center rounded-full border border-green-600/50 transition-colors flex-shrink-0 ${
@@ -199,7 +215,6 @@ const AITutor = () => {
                 }`}
                 onClick={handleTalk}
             >
-                {/* Your Custom SVG Animation Logic */}
                 {isTalking ? (
                    <svg fill="hsl(142, 76%, 36%)" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="w-8 h-8">
                       <circle cx="12" cy="12" r="0">
@@ -212,8 +227,6 @@ const AITutor = () => {
                 )}
             </button>
             
-
-            {/* Text Input */}
             <div className="flex-1 relative">
                 <input 
                     type="text" 
@@ -224,7 +237,6 @@ const AITutor = () => {
                 />
             </div>
 
-            {/* Send Button */}
             <button 
                 type="submit"
                 disabled={!inputText.trim() || isSending}
