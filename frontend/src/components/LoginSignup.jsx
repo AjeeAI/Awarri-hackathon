@@ -7,14 +7,9 @@ import { useNavigate } from "react-router-dom";
 // Best Practice: Use environment variables for API URLs
 const API_URL = "http://127.0.0.1:8000";
 
-<<<<<<< HEAD
-const SignUp = ({ onAuthSuccess }) => {
-//   const [isSignup, setIsSignup] = useState(false);
-=======
 const AuthView = ({setIsLoggedIn}) => {
   const navigate = useNavigate();
   const [isSignup, setIsSignup] = useState(false);
->>>>>>> d2a18a6d17122d00edfe0ba8848a96ad96fc04ad
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(""); 
   const [formData, setFormData] = useState({ 
@@ -30,14 +25,6 @@ const AuthView = ({setIsLoggedIn}) => {
     setError("");
 
     try {
-<<<<<<< HEAD
-     const response = await fetch()
-      const token = response.token;
-      const user = response.user || { name: formData.name, id: response.userId };
-      onAuthSuccess(isSignup, token, user);
-    } catch (e) {
-      console.error(e);
-=======
       const endpoint = isSignup ? "/signup" : "/login";
       
       const response = await fetch(`${API_URL}${endpoint}`, {
@@ -74,7 +61,6 @@ const AuthView = ({setIsLoggedIn}) => {
       console.error(err);
      
       setError(err.message || "Something went wrong. Please try again.");
->>>>>>> d2a18a6d17122d00edfe0ba8848a96ad96fc04ad
     } finally {
       setIsLoading(false);
     }
@@ -176,4 +162,4 @@ const AuthView = ({setIsLoggedIn}) => {
   );
 };
 
-export default SignUp;
+export default AuthView;

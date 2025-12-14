@@ -2,6 +2,7 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from dotenv import load_dotenv
 from sqlalchemy import text
+import pymysql
 import os
 load_dotenv()
 
@@ -26,7 +27,7 @@ CREATE TABLE IF NOT EXISTS users(
 db.execute(create_users_table)
 print("User table created successfully")
 
-create_tables_query = """
+create_tables_query = text("""
 CREATE TABLE IF NOT EXISTS onboarding (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id VARCHAR(50) NOT NULL,
@@ -39,7 +40,6 @@ CREATE TABLE IF NOT EXISTS onboarding (
     proficiency_level VARCHAR(50),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-"""
-
-db.execute(text(create_tables_query))
+""")
+db.execute(create_tables_query)
 print("Onboarding table created successfully.")

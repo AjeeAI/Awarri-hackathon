@@ -8,11 +8,7 @@ import {
   Mail, Key, UserPlus, Baby, Smile, Briefcase, Plane, GraduationCap,
   Music, Target, BookA, Sparkles, Footprints, Headphones,
   Utensils, ShoppingBag, Save, Camera, Loader2, Languages,
-<<<<<<< HEAD
-  Route as RouteIcon
-=======
  
->>>>>>> d2a18a6d17122d00edfe0ba8848a96ad96fc04ad
 } from 'lucide-react';
 import './App.css'
 import AuthView from './components/LoginSignup';
@@ -20,9 +16,6 @@ import OnboardingView from './components/Onboarding';
 import DashboardView from './components/Dashboard';
 import LearnView from './components/LearnView';
 import LessonView from './components/LessonView';
-<<<<<<< HEAD
-import {Route, Routes } from 'react-router-dom';
-=======
 import { Route, Routes } from 'react-router-dom';
 import SideNav from './components/SideNav';
 import Profile from './components/Profile';
@@ -30,7 +23,6 @@ import Leaderboard from './components/Leaderboard';
 import AITutor from './components/Tutor';
 import Settings from './components/Settings';
 import { useState } from 'react';
->>>>>>> d2a18a6d17122d00edfe0ba8848a96ad96fc04ad
 
 const App = () => {
   // FIX 1: Check localStorage on load so refresh doesn't log you out
@@ -39,19 +31,6 @@ const App = () => {
   });
 
   return (
-<<<<<<< HEAD
-    <div>
-      <Routes>
-        <Route path='/' element={<AuthView/>}/>
-        <Route path='/onboarding' element={<OnboardingView/>}/>
-        <Route path='/dashboard' element={<DashboardView/>}/>
-        <Route path='/learn' element={<LearnView/>}/>
-        <Route path='/lessons' element={<LessonView/>}/>
-      </Routes>
-     
-    </div>
-  )
-=======
     <div className='flex h-screen bg-[#0B0F19]'> {/* Ensure full height and dark bg */}
       
       {/* Sidebar only shows when logged in */}
@@ -76,7 +55,6 @@ const App = () => {
       </div>
     </div>
   );
->>>>>>> d2a18a6d17122d00edfe0ba8848a96ad96fc04ad
 }
 
 export default App;
