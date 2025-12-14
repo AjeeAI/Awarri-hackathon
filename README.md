@@ -30,7 +30,7 @@ It is an AI-powered learning system that helps users learn, understand, and conf
 
 Growing up, many Nigerian families emphasized speaking perfect English as a marker of success. As a result, local languages were often sidelined.
 
-For many people — especially those in the diaspora — this meant losing the ability to speak their mother tongue. Even when parents later attempted to teach it, the opportunity had already passed.
+For many people, especially those in the diaspora this meant losing the ability to speak their mother tongue. Even when parents later attempted to teach it, the opportunity had already passed.
 
 AwaSabi exists to answer one question:
 
@@ -111,7 +111,7 @@ The system is designed to scale efficiently while remaining accessible in low-ba
 - Schools, NGOs, and cultural institutions
 - Educators and language content creators
 
-Nigeria alone has over **120 million young people**, with millions more across the African diaspora — a massive underserved market.
+Nigeria alone has over **120 million young people**, with millions more across the African diaspora, a massive underserved market.
 
 ---
 
