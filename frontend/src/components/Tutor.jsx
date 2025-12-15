@@ -66,7 +66,7 @@ const AITutor = () => {
     if (!isTalking) {
       try {
         // Mic is activated here
-        // recognitionRef.current.start();
+        recognitionRef.current.start();
         setIsTalking(true);
       } catch (err) {
         console.error("Mic already active");
