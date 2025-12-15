@@ -70,8 +70,9 @@ const AuthView = ({setIsLoggedIn}) => {
     <div className="w-full min-h-screen h-full flex items-center justify-center p-4 bg-white dark:bg-slate-950 relative overflow-hidden">
         <div className="w-full max-w-md z-10">
             <div className="text-center mb-8">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-green-600 rounded-2xl text-white font-bold text-3xl shadow-lg shadow-green-600/20 mb-4">N</div>
-                <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">N-ATLaS</h1>
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-green-600 rounded-2xl text-white font-bold text-3xl shadow-lg shadow-green-600/20 mb-4"><img src="src\assets\awasabi_logo.jpg"
+                className="rounded-lg"/></div>
+                <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">AwaSabi</h1>
                 <p className="text-slate-500 dark:text-slate-400">Your gateway to Nigerian languages.</p>
             </div>
             

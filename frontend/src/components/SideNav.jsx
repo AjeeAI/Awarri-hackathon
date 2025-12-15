@@ -52,9 +52,10 @@ const SideNav = () => {
       {/* --- Logo Section --- */}
       <div className="flex items-center gap-3 mb-12">
         <div className="w-8 h-8 bg-green-600 rounded-lg flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-green-900/20">
-          N
+          <img src="src\assets\awasabi_logo.jpg"
+                className="rounded-lg"/>
         </div>
-        <span className="text-xl font-bold text-white tracking-wide">N-ATLaS</span>
+        <span className="text-xl font-bold text-white tracking-wide">AwaSabi</span>
       </div>
 
       {/* --- Navigation Items --- */}

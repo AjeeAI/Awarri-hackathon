@@ -1,3 +1,4 @@
+import { useState } from "react"; // 1. Don't forget to import useState!
 import { 
   Mic, Heart, Flame, Star, Zap, ChevronRight, Globe, CheckSquare, Music, Target, BookA, Headphones
 } from 'lucide-react';
@@ -5,14 +6,26 @@ import StatBadge from './StatBadge';
 import QuestItem from './QuestItem';
 import PracticeCard from './PracticeCard';
 
-const DashboardView = ({ onStart, userLang }) => (
-    
+// 2. Changed "(" to "{" to start a function block
+const DashboardView = ({ onStart, userLang }) => { 
+      
+      const [user, setUser] = useState(() => {
+        const stored = localStorage.getItem('user');
+        try {
+          return stored ? JSON.parse(stored) : { name: 'Guest', email: 'guest@example.com' };
+        } catch (e) {
+          return { name: 'Guest', email: 'guest@example.com' };
+        }
+      });
+
+    // 3. Added the "return" statement here
+    return (
     <div className="flex-1 overflow-y-auto min-h-screen p-4 md:p-8 bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
         <div className="w-full">
             <div className="flex justify-between items-end mb-8">
                 <div>
                     <h1 className="text-3xl font-extrabold text-slate-800 dark:text-white mb-2">
-                        E kaaro, John! 👋
+                        E kaaro, {user.name}! 👋
                     </h1>
                     <p className="text-slate-500 dark:text-slate-400">
                         Ready to continue your {userLang || 'Yoruba'} journey?
@@ -48,9 +61,6 @@ const DashboardView = ({ onStart, userLang }) => (
                         <h3 className="font-bold text-lg flex items-center text-slate-800 dark:text-white">
                             <Star className="mr-2 text-yellow-500" size={20} /> Daily Quests
                         </h3>
-                        {/* <span className="text-xs font-bold text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">
-                            12H LEFT
-                        </span> */}
                     </div>
                     <div className="space-y-4">
                         <QuestItem icon={<Mic size={20} className="text-blue-500" />} title="Speak 5 phrases" progress={0} total={5} />
@@ -72,6 +82,7 @@ const DashboardView = ({ onStart, userLang }) => (
             </div>
         </div>
   </div>
-);
+  );
+}; // 4. Closed the function block here
 
-export default DashboardView
+export default DashboardView;

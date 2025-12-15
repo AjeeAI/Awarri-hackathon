@@ -29,17 +29,22 @@ print("User table created successfully")
 create_tables_query = """
 CREATE TABLE IF NOT EXISTS onboarding (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id VARCHAR(50) NOT NULL,
+    user_id INT NOT NULL,
     age_range  VARCHAR(50),
     is_guardian BOOLEAN,
     gender VARCHAR(50),
     target_language VARCHAR(50),
-    motivations JSON,
+    motivations TEXT,               
     learning_path VARCHAR(50),
     proficiency_level VARCHAR(50),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 """
 
+# Note: Changed 'motivations JSON' to 'motivations TEXT' above.
+# SQLAlchemy/FastAPI can still treat it as a dictionary in your code.
+
 db.execute(text(create_tables_query))
+db.commit()
 print("Onboarding table created successfully.")
