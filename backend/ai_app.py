@@ -1,12 +1,13 @@
 import uvicorn
-from fastapi import FastAPI, BackgroundTasks, HTTPException
+from fastapi import APIRouter, FastAPI, BackgroundTasks, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
-from main import text_to_speech, translate, translate_and_speak
+from ai_main import text_to_speech, translate, translate_and_speak
 from pydantic import BaseModel
-from pyngrok import ngrok
+# from pyngrok import ngrok
 from dotenv import load_dotenv
 import os
+
 from api import router as curriculum_router
 from api import router as lesson_router
 from api import router as practice_router
@@ -14,6 +15,7 @@ from api import router as evaluate_router
 from api import router as progress_router
 load_dotenv()
 
+router = APIRouter()
 app = FastAPI(version = "1.0.0")
 
 app.add_middleware(
@@ -31,11 +33,11 @@ class DefinePrompt(BaseModel):
     user_prompt: str
     language: str
 
-@app.get("/")
+@router.get("/")
 def home():
     return {"Message": "Welcome to our AwaSabi"}
 
-@app.post("/english_translator")
+@router.post("/english_translator")
 def translate_engish(requests: DefinePrompt):
     user_prompt = requests.user_prompt
     language = requests.language
@@ -43,26 +45,14 @@ def translate_engish(requests: DefinePrompt):
     return {"Translation": result}
 
 
-# @app.post("/english_translator_voice")
-# def translate_engish_voice(requests: DefinePrompt):
-#     user_prompt = requests.user_prompt
-#     language = requests.language
-#     result = translate_and_speak(user_prompt, language, "translation_audio.wav")
 
-#     audio_path = result["audio_file"]
-
-#     return FileResponse(
-#         audio_path,
-#         media_type="audio/wav",
-#         filename="translation_audio.wav"
-#     )
 
 
 class SpeakRequest(BaseModel):
     text: str       # Matches 'text' in React
     language: str   # Matches 'language' in React
 
-@app.post("/english_translator_voice")
+@router.post("/english_translator_voice")
 async def english_translator_voice(request: SpeakRequest, background_tasks: BackgroundTasks):
     try:
         # 1. Direct Text-to-Speech (No Translation step needed)
@@ -93,8 +83,7 @@ app.include_router(evaluate_router, prefix="/api")
 # token = os.getenv("AUTH_TOKEN")
 # ngrok.set_auth_token(token)
 
-# public_url = ngrok.connect(8000)
-# print("Public URL:", public_url)
+
 
 if __name__ == "__main__":
     uvicorn.run(app = app, host="127.0.0.1", port=8000)

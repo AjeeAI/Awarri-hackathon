@@ -105,7 +105,7 @@ const DashboardView = ({ userLang }) => {
                     <div className="space-y-4">
                         <QuestItem icon={<Mic size={20} className="text-blue-500" />} title="Speak 5 phrases" progress={0} total={5} />
                         <QuestItem icon={<CheckSquare size={20} className="text-green-500" />} title="Complete 1 Lesson" progress={0} total={1} />
-                        <QuestItem icon={<Target size={20} className="text-red-500" />} title="Score 90%" progress={0} total={90} unit="%" />
+                        <QuestItem icon={<Target size={20} className="text-red-500" />} title="Score 100%" progress={0} total={100} unit="%" />
                     </div>
                 </div>
                 <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm xl:col-span-2">

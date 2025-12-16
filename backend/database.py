@@ -42,8 +42,7 @@ CREATE TABLE IF NOT EXISTS onboarding (
 );
 """
 
-# Note: Changed 'motivations JSON' to 'motivations TEXT' above.
-# SQLAlchemy/FastAPI can still treat it as a dictionary in your code.
+
 
 db.execute(text(create_tables_query))
 db.commit()

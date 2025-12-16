@@ -10,6 +10,16 @@ import os
 from onboarding import router as onboarding_router
 from data import router as data_router
 
+from ai_app import router as english_translator_router
+from ai_app import router as english_translator_voice_router
+
+from ai_api import router as curriculum_router
+from ai_api import router as lesson_router
+from ai_api import router as practice_router
+from ai_api import router as evaluate_router
+from ai_api import router as progress_router
+
+
 
 load_dotenv()
 
@@ -18,12 +28,12 @@ app = FastAPI(title="Awarri hackathon", version="1.0.0")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*",
-                   "https://langteach-awarri.web.app"], # NOTE: If deploying, change "*" to your actual frontend URL
+                   "https://langteach-awarri.web.app"], 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-token_time = int(os.getenv("token_time", 30)) # Added default fallback
+token_time = int(os.getenv("token_time", 30)) 
 
 @app.get("/")
 def home():
@@ -72,7 +82,7 @@ def signup(user: User):
     
     except Exception as e:
         db.rollback()
-        # This usually happens if the email already exists
+        
         raise HTTPException(status_code=500, detail=f"Signup failed: {str(e)}")
     
 class Login(BaseModel):
@@ -111,14 +121,34 @@ def login(user: Login):
         return {
             "message": "Login successful",
             "token": encoded_token,
-            "user": {"name": result.name, "email": result.email} # Helpful to send user data back
+            "user": {"name": result.name, "email": result.email}
         }
         
-    except HTTPException as he:
-        raise he # Re-raise HTTP exceptions so they return correct codes
+    except HTTPException as e:
+        raise e 
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
 
 app.include_router(onboarding_router, prefix="/api")
 app.include_router(data_router, prefix="/api")
+
+
+
+"""
+Endpoint for AI specific tasks
+""" 
+
+app.include_router(english_translator_router, prefix="/api")
+app.include_router(english_translator_voice_router, prefix="/api")
+
+
+app.include_router(curriculum_router, prefix="/api")
+app.include_router(lesson_router, prefix="/api")
+app.include_router(practice_router, prefix="/api")
+app.include_router(progress_router, prefix="/api")
+app.include_router(evaluate_router, prefix="/api")
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)

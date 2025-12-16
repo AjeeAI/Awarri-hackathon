@@ -26,46 +26,93 @@ const LessonView = () => {
             setCurriculum(parsed);
         } catch (e) {
             console.error("Failed to parse curriculum", e);
-            // Fallback mock data if parsing fails
-            setCurriculum(getMockCurriculum());
+            setCurriculum(getEnglishCourseCurriculum());
         }
     } else {
-        // Fallback if no data exists
-        setCurriculum(getMockCurriculum());
+        // Use the specific English Course data provided
+        setCurriculum(getEnglishCourseCurriculum());
     }
     setIsLoading(false);
   }, []);
 
   // --- HELPERS ---
   
-  // Helper to extract a flat list of questions from the complicated curriculum structure
-  // This simplifies navigation (Next/Prev) significantly
+  // Helper to generate a unique ID
+  const generateId = () => Math.random().toString(36).substr(2, 9);
+
+  // Helper to extract questions based on the provided Syllabus
   const getQuestions = () => {
       if (!curriculum || !curriculum.weeks) return [];
       
-      // Flatten all sessions into a single array of "quiz items"
-      // For this demo, we'll create a synthetic question for each session topic
       let allQuestions = [];
       
       curriculum.weeks.forEach((week) => {
-          week.sessions.forEach((session) => {
-              // Create a "Translate this" question based on the topic
-              // In a real app, your AI would generate specific Q&A pairs.
-              // Here, we simulate it based on the session topic.
+          week.sessions.forEach((session, index) => {
+              
+              // DEFINITION: 
+              // displayPhrase = The Yoruba Question
+              // correctEnglishPhrase = The English Answer (to be built)
+              let displayPhrase = "";
+              let correctEnglishPhrase = "";
+              let distractors = [];
+
+              // Logic to map syllabus topics to Yoruba -> English exercises
+              if (session.topic.includes("Goal Setting")) {
+                  displayPhrase = "Emi yoo ṣeto awọn ibi-afẹde pato";
+                  correctEnglishPhrase = "I will set specific goals";
+                  distractors = ["not", "lazy", "tomorrow"];
+              } else if (session.topic.includes("Relationships")) {
+                  displayPhrase = "Ojulumọ timọtimọ ni";
+                  correctEnglishPhrase = "She is a close acquaintance";
+                  distractors = ["enemy", "blue", "run"];
+              } else if (session.topic.includes("Cultural")) {
+                  displayPhrase = "A bọwọ fun awọn iyatọ aṣa";
+                  correctEnglishPhrase = "We respect cultural differences";
+                  distractors = ["ignore", "same", "eat"];
+              } else if (session.topic.includes("Communication")) {
+                  displayPhrase = "Igbọran ti o jinlẹ n mu ibaraẹnisọrọ dara";
+                  correctEnglishPhrase = "Active listening improves communication";
+                  distractors = ["sleeping", "bad", "shout"];
+              } else if (session.topic.includes("Pronunciation")) {
+                   displayPhrase = "Iṣe deede n mu pipe ọrọ mi dara";
+                   correctEnglishPhrase = "Practice enhances my pronunciation";
+                   distractors = ["lazy", "quiet", "stop"];
+              } else if (session.topic.includes("Reflecting")) {
+                  displayPhrase = "Mo n ronu lori ilọsiwaju";
+                  correctEnglishPhrase = "I am reflecting on progress";
+                  distractors = ["forgetting", "running", "sad"];
+              } else if (session.topic.includes("Final Project")) {
+                  displayPhrase = "Emi yoo ṣe ilana iṣẹ akanṣe mi";
+                  correctEnglishPhrase = "I will outline my project";
+                  distractors = ["destroy", "sleep", "paper"];
+              } else {
+                  // Fallback
+                  displayPhrase = "Mo n kọ awọn ọgbọn Gẹẹsi";
+                  correctEnglishPhrase = "I am learning English skills";
+                  distractors = ["math", "flying", "red"];
+              }
+
+              // Create the word objects
+              const correctWords = correctEnglishPhrase.split(" ");
+              const distractorWords = distractors;
+              
+              // Combine and shuffle options (All English)
+              const allWords = [...correctWords, ...distractorWords].map(text => ({
+                  id: generateId(),
+                  text: text
+              })).sort(() => Math.random() - 0.5);
+
               allQuestions.push({
-                  id: `${week.week}-${session.session}`,
+                  id: `${week.week}-${session.session || index}`,
                   type: 'translate',
-                  prompt: "Translate this phrase",
-                  context: `${week.theme} • ${session.topic}`,
-                  // Mock data for the exercise
-                  target: session.topic.includes("Greeting") ? "Bawo ni" : "Mo nlo si oja", 
-                  correct_answer: session.topic.includes("Greeting") ? ["How", "are", "you"] : ["I", "am", "going", "to", "market"],
-                  options: [
-                      {id: 1, text: "How"}, {id: 2, text: "are"}, {id: 3, text: "you"}, 
-                      {id: 4, text: "I"}, {id: 5, text: "am"}, {id: 6, text: "going"}, 
-                      {id: 7, text: "to"}, {id: 8, text: "market"}, {id: 9, text: "is"}, 
-                      {id: 10, text: "good"}
-                  ].sort(() => Math.random() - 0.5) // Shuffle options
+                  prompt: "Translate this",
+                  context: `Week ${week.week} • ${session.topic}`,
+                  // Target is what is displayed in the big text area (Yoruba)
+                  target: displayPhrase, 
+                  // Correct answer is the array of English words
+                  correct_answer: correctWords,
+                  // Options are the English tiles
+                  options: allWords
               });
           });
       });
@@ -78,7 +125,8 @@ const LessonView = () => {
   // Update progress bar whenever index changes
   useEffect(() => {
       if (questions.length > 0) {
-          setProgress(Math.round(((currentQuestionIndex) / questions.length) * 100));
+          const pct = Math.round(((currentQuestionIndex) / questions.length) * 100);
+          setProgress(pct);
       }
   }, [currentQuestionIndex, questions.length]);
 
@@ -103,14 +151,13 @@ const LessonView = () => {
     const userAnswer = selectedWords.map(w => w.text).join(" ");
     const correctAnswer = currentQ.correct_answer.join(" ");
 
-    if (userAnswer === correctAnswer) {
+    // Case insensitive comparison
+    if (userAnswer.toLowerCase() === correctAnswer.toLowerCase()) {
         setStatus('correct');
-        setScore(prev => prev + 10); // +10 XP for correct answer
-        // Play success sound here if desired
+        setScore(prev => prev + 10); 
     } else {
         setStatus('wrong');
         setLives(prev => Math.max(0, prev - 1));
-        // Play error sound here
     }
   };
 
@@ -119,8 +166,8 @@ const LessonView = () => {
           // Move to next question
           if (currentQuestionIndex < questions.length - 1) {
               setCurrentQuestionIndex(prev => prev + 1);
-              setSelectedWords([]); // Reset selection
-              setStatus('idle');    // Reset status
+              setSelectedWords([]); 
+              setStatus('idle');    
           } else {
               // End of Lesson
               setStatus('completed');
@@ -151,7 +198,7 @@ const LessonView = () => {
                 <Heart size={48} className="text-red-500 fill-current" />
             </div>
             <h2 className="text-3xl font-bold text-slate-800 dark:text-white mb-2">Out of Lives!</h2>
-            <p className="text-slate-500 mb-8">Don't worry, practice makes perfect.</p>
+            <p className="text-slate-500 mb-8">Review the course material and try again.</p>
             <button onClick={handleExit} className="bg-slate-900 text-white px-8 py-3 rounded-xl font-bold hover:scale-105 transition-transform">
                 Return to Dashboard
             </button>
@@ -163,12 +210,11 @@ const LessonView = () => {
   if (status === 'completed') {
       return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 dark:bg-slate-950 p-6 text-center relative overflow-hidden">
-            {/* Confetti or decoration could go here */}
             <div className="w-24 h-24 bg-yellow-100 rounded-full flex items-center justify-center mb-6 animate-bounce">
                 <Star size={48} className="text-yellow-500 fill-current" />
             </div>
             <h2 className="text-3xl font-bold text-slate-800 dark:text-white mb-2">Lesson Complete!</h2>
-            <p className="text-slate-500 mb-8">You're getting better every day.</p>
+            <p className="text-slate-500 mb-8">You've mastered this week's objectives.</p>
             
             <div className="grid grid-cols-2 gap-4 w-full max-w-sm mb-8">
                 <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
@@ -188,7 +234,7 @@ const LessonView = () => {
       );
   }
 
-  // EMPTY STATE (Safety Check)
+  // EMPTY STATE
   if (!currentQ) {
       return <div className="p-8 text-center">No questions found for this lesson. <button onClick={handleExit} className="underline">Go Back</button></div>;
   }
@@ -216,65 +262,72 @@ const LessonView = () => {
         </div>
       </div>
 
-      {/* QUESTION AREA */}
-      <div className="flex-1 flex flex-col items-center justify-center p-6 overflow-y-auto w-full max-w-3xl mx-auto">
-        
-        <div className="w-full">
-          <h3 className="text-center text-slate-400 text-xs font-bold uppercase tracking-widest mb-6">{currentQ.context}</h3>
+      {/* QUESTION AREA WRAPPER */}
+      {/* FIX: Moved 'overflow-y-auto' to this full-width parent wrapper.
+         The 'max-w-3xl' is now on the inner child. 
+         This pushes the scrollbar to the far right edge of the window.
+      */}
+      <div className="flex-1 w-full overflow-y-auto">
+        <div className="max-w-3xl mx-auto flex flex-col items-center justify-center p-6 min-h-full">
           
-          <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 p-6 md:p-10 mb-8 transition-colors duration-300 relative overflow-hidden">
-             {/* Decorative Background blob */}
-             <div className="absolute -top-10 -right-10 w-32 h-32 bg-green-50 dark:bg-green-900/10 rounded-full blur-2xl"></div>
+          <div className="w-full">
+            <h3 className="text-center text-slate-400 text-xs font-bold uppercase tracking-widest mb-6">{currentQ.context}</h3>
+            
+            <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-200 dark:border-slate-800 p-6 md:p-10 mb-8 transition-colors duration-300 relative overflow-hidden">
+              {/* Decorative Background blob */}
+              <div className="absolute -top-10 -right-10 w-32 h-32 bg-green-50 dark:bg-green-900/10 rounded-full blur-2xl"></div>
 
-             <div className="flex flex-col md:flex-row items-start md:items-center gap-6 mb-8 relative z-10">
-               <button className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-900/20 hover:scale-105 active:scale-95 flex items-center justify-center text-blue-500 border border-blue-100 dark:border-blue-900/30 transition-all shadow-sm">
-                 <Volume2 size={28} />
-               </button>
-               <div>
-                 <h2 className="text-xl md:text-2xl font-medium text-slate-500 dark:text-slate-400 mb-1">
-                   {currentQ.prompt}:
-                 </h2>
-                 <p className="text-3xl md:text-4xl font-black text-slate-800 dark:text-white leading-tight">
-                   "{currentQ.target}"
-                 </p>
-               </div>
-             </div>
-
-             {/* Drop Zone */}
-             <div className="min-h-24 bg-slate-50 dark:bg-slate-800/50 border-2 border-slate-200 dark:border-slate-700 border-dashed rounded-2xl p-4 flex flex-wrap gap-2 items-center transition-all">
-                {selectedWords.length === 0 && (
-                    <span className="text-slate-400 text-sm font-medium italic w-full text-center">Tap words below to translate...</span>
-                )}
-                {selectedWords.map((word, idx) => (
-                  <button 
-                    key={`${word.id}-${idx}`} 
-                    onClick={() => handleWordClick(word)} 
-                    className="animate-in fade-in zoom-in duration-200 px-4 py-2 bg-white dark:bg-slate-700 border-b-4 border-slate-200 dark:border-slate-900 rounded-xl font-bold text-slate-700 dark:text-white active:border-b-0 active:translate-y-1 transition-all text-sm md:text-base shadow-sm"
-                  >
-                    {word.text}
-                  </button>
-                ))}
-             </div>
-          </div>
-
-          {/* Word Bank */}
-          <div className="flex flex-wrap gap-3 justify-center">
-            {currentQ.options.map((word) => {
-              // Check if word is already selected (by ID) to disable it visually
-              const isSelected = selectedWords.some(w => w.id === word.id);
-              
-              return (
-                <div key={word.id} className={isSelected ? 'placeholder opacity-0 pointer-events-none' : ''}>
-                     <button 
-                        onClick={() => handleWordClick(word)} 
-                        disabled={isSelected || status !== 'idle'} 
-                        className="px-5 py-3 bg-white dark:bg-slate-900 border-b-4 border-slate-200 dark:border-slate-700 rounded-xl font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 active:border-b-0 active:translate-y-1 transition-all text-sm md:text-base"
-                    >
-                        {word.text}
-                    </button>
+              <div className="flex flex-col md:flex-row items-start md:items-center gap-6 mb-8 relative z-10">
+                <button className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-900/20 hover:scale-105 active:scale-95 flex items-center justify-center text-blue-500 border border-blue-100 dark:border-blue-900/30 transition-all shadow-sm">
+                  <Volume2 size={28} />
+                </button>
+                <div>
+                  <h2 className="text-xl md:text-2xl font-medium text-slate-500 dark:text-slate-400 mb-1">
+                    {currentQ.prompt}:
+                  </h2>
+                  {/* This displays the YORUBA phrase */}
+                  <p className="text-3xl md:text-4xl font-black text-slate-800 dark:text-white leading-tight">
+                    "{currentQ.target}"
+                  </p>
                 </div>
-              )
-            })}
+              </div>
+
+              {/* Drop Zone */}
+              <div className="min-h-24 bg-slate-50 dark:bg-slate-800/50 border-2 border-slate-200 dark:border-slate-700 border-dashed rounded-2xl p-4 flex flex-wrap gap-2 items-center transition-all">
+                  {selectedWords.length === 0 && (
+                      <span className="text-slate-400 text-sm font-medium italic w-full text-center">Tap words below to translate to English...</span>
+                  )}
+                  {selectedWords.map((word, idx) => (
+                    <button 
+                      key={`${word.id}-${idx}`} 
+                      onClick={() => handleWordClick(word)} 
+                      className="animate-in fade-in zoom-in duration-200 px-4 py-2 bg-white dark:bg-slate-700 border-b-4 border-slate-200 dark:border-slate-900 rounded-xl font-bold text-slate-700 dark:text-white active:border-b-0 active:translate-y-1 transition-all text-sm md:text-base shadow-sm"
+                    >
+                      {word.text}
+                    </button>
+                  ))}
+              </div>
+            </div>
+
+            {/* Word Bank (English Words) */}
+            <div className="flex flex-wrap gap-3 justify-center pb-8">
+              {currentQ.options.map((word) => {
+                // Check if word is already selected (by ID) to disable it visually
+                const isSelected = selectedWords.some(w => w.id === word.id);
+                
+                return (
+                  <div key={word.id} className={isSelected ? 'placeholder opacity-0 pointer-events-none' : ''}>
+                        <button 
+                          onClick={() => handleWordClick(word)} 
+                          disabled={isSelected || status !== 'idle'} 
+                          className="px-5 py-3 bg-white dark:bg-slate-900 border-b-4 border-slate-200 dark:border-slate-700 rounded-xl font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 active:border-b-0 active:translate-y-1 transition-all text-sm md:text-base"
+                      >
+                          {word.text}
+                      </button>
+                  </div>
+                )
+              })}
+            </div>
           </div>
         </div>
       </div>
@@ -301,7 +354,7 @@ const LessonView = () => {
                      </div>
                      <div>
                          <h4 className="font-black text-green-700 dark:text-green-400 text-lg">Nicely done!</h4>
-                         <p className="text-green-600 dark:text-green-500/80 text-sm hidden md:block">Meaning: {currentQ.correct_answer.join(" ")}</p>
+                         <p className="text-green-600 dark:text-green-500/80 text-sm hidden md:block">Answer: {currentQ.correct_answer.join(" ")}</p>
                      </div>
                  </div>
              )}
@@ -337,15 +390,40 @@ const LessonView = () => {
   );
 }; 
 
-// Mock Data Helper (Safety Fallback)
-const getMockCurriculum = () => ({
-    overview: "Fallback Curriculum",
+// DATA: The Specific English Course Syllabus provided
+const getEnglishCourseCurriculum = () => ({
+    overview: "This four-week English course focuses on developing speaking and listening skills while improving reading comprehension and writing abilities.",
     weeks: [
         {
-            week: 1, theme: "Introduction", sessions: [
-                { session: 1, topic: "Greetings" },
-                { session: 2, topic: "Self Introduction" },
-                { session: 3, topic: "Numbers" }
+            week: 1,
+            theme: "Introduction to Weekly Topics and Goal Setting",
+            sessions: [
+                { session: 1, topic: "Course Overview and Goal Setting" }
+            ]
+        },
+        {
+            week: 2,
+            theme: "Building Relationships and Understanding Different Perspectives",
+            sessions: [
+                { session: 1, topic: "Vocabulary Related to Relationships" }
+            ]
+        },
+        {
+            week: 3,
+            theme: "Cultural Awareness and Effective Communication",
+            sessions: [
+                { session: 1, topic: "Cultural Differences and Similarities" },
+                { session: 2, topic: "Improving Communication Skills" },
+                { session: 3, topic: "Enhancing Pronunciation" }
+            ]
+        },
+        {
+            week: 4,
+            theme: "Reflecting on Progress and Final Project Preparation",
+            sessions: [
+                { session: 1, topic: "Reflecting on Progress" },
+                { session: 2, topic: "Final Project Preparation" },
+                { session: 3, topic: "Demonstrating Skills Acquisition" }
             ]
         }
     ]
