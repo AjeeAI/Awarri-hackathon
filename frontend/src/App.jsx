@@ -61,7 +61,7 @@ const App = () => {
           {/* Both /learn and /curriculum point to LearnView */}
           <Route 
             path='/learn' 
-            element={<ProtectedRoute><LearnView /></ProtectedRoute>} 
+            element={<ProtectedRoute><LessonView /></ProtectedRoute>} 
           />
           <Route 
             path='/curriculum' 

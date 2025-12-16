@@ -8,6 +8,8 @@ from middleware import create_token, verify_token
 from database import db
 import os
 from onboarding import router as onboarding_router
+from data import router as data_router
+
 
 load_dotenv()
 
@@ -35,26 +37,44 @@ class User(BaseModel):
 @app.post("/signup")
 def signup(user: User):
     try:
+        # 1. Hash the password
         salt = bcrypt.gensalt()
         hashed_bytes = bcrypt.hashpw(user.password.encode("utf-8"), salt)
-        # FIX 1: Decode bytes to string before saving to DB
         hashed_password = hashed_bytes.decode('utf-8') 
 
-        query = text("""
+        # 2. Insert into DB
+        insert_query = text("""
             INSERT INTO users (name, email, password)
             VALUES (:name, :email, :password)
         """)
         
-        db.execute(query, {"name": user.name, "email": user.email, "password": hashed_password})
+        db.execute(insert_query, {"name": user.name, "email": user.email, "password": hashed_password})
         db.commit()
         
-        return {"message": "User created", "data": {"name": user.name, "email": user.email}}
+        # 3. Fetch the new user immediately to get the ID
+        # (We need the ID to generate the token, just like in login)
+        fetch_query = text("SELECT id, name, email FROM users WHERE email = :email")
+        new_user = db.execute(fetch_query, {"email": user.email}).mappings().fetchone()
+        
+        # 4. Create the Token
+        encoded_token = create_token(details={
+            "id": new_user["id"],
+            "email": new_user["email"],
+            "name": new_user["name"]
+        }, expiry=token_time)
+        
+        # 5. Return Token + User Data
+        return {
+            "message": "User created", 
+            "token": encoded_token,
+            "user": {"name": new_user["name"], "email": new_user["email"]}
+        }
     
     except Exception as e:
         db.rollback()
-        # Check for duplicate email error here ideally
-        raise HTTPException(status_code=500, detail=str(e))
-
+        # This usually happens if the email already exists
+        raise HTTPException(status_code=500, detail=f"Signup failed: {str(e)}")
+    
 class Login(BaseModel):
     email: str = Field(..., example="adesanya@gmail.com")
     password: str = Field(..., example="Ini123")
@@ -101,3 +121,4 @@ def login(user: Login):
         raise HTTPException(status_code=500, detail=str(e))
 
 app.include_router(onboarding_router, prefix="/api")
+app.include_router(data_router, prefix="/api")

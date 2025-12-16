@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 
 const AITutor = () => {
+  const token = localStorage.getItem("token");
   const [inputText, setInputText] = useState('');
   const [isTalking, setIsTalking] = useState(false);
   const [isSending, setIsSending] = useState(false);
@@ -15,47 +16,63 @@ const AITutor = () => {
     {
       id: 1,
       sender: 'ai',
-      text: "Good morning. I have very beautiful lace. What do you want to buy?",
-      language: "Yoruba",
+      text: "Hello! I am a language translator. What would you like me to translate for you?",
+      language: `{userData?.target_language}`,
       translation: 'E kaaro o! Mo ni lace to rewa gan. Ki le fe ra?',
     }
   ]);
+
+  const [userData, setUserData] = useState(null);
+    const fetchData = async ()=> {
+      const response = await fetch("http://localhost:8000/api/user/data",
+        {method: "GET", headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}` 
+      }}
+      )
+      const responseData = await response.json();
+      setUserData(responseData);
+      console.log(responseData);
+    }
+    useEffect(()=> {
+      fetchData();
+    }, []);
 
   // Ref to hold the Speech Recognition instance
   const recognitionRef = useRef(null);
 
   // Initialize Speech Logic on Mount
-  // useEffect(() => {
-  //   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  useEffect(() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     
-  //   if (SpeechRecognition) {
-  //     recognitionRef.current = new SpeechRecognition();
-  //     recognitionRef.current.lang = 'en-US';
-  //     recognitionRef.current.continuous = true; 
-  //     recognitionRef.current.interimResults = true;
+    if (SpeechRecognition) {
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.lang = 'en-US';
+      recognitionRef.current.continuous = true; 
+      recognitionRef.current.interimResults = true;
 
-  //     recognitionRef.current.onresult = (event) => {
-  //       const transcript = Array.from(event.results)
-  //         .map(result => result[0].transcript)
-  //         .join('');
-  //       setInputText(transcript);
-  //     };
+      recognitionRef.current.onresult = (event) => {
+        const transcript = Array.from(event.results)
+          .map(result => result[0].transcript)
+          .join('');
+        setInputText(transcript);
+      };
 
-  //     recognitionRef.current.onend = () => {
-  //       setIsTalking(false);
-  //     };
+      recognitionRef.current.onend = () => {
+        setIsTalking(false);
+      };
 
-  //     recognitionRef.current.onerror = (event) => {
-  //       if (event.error !== 'no-speech') {
-  //           setIsTalking(false);
-  //       }
-  //     };
-  //   }
+      recognitionRef.current.onerror = (event) => {
+        if (event.error !== 'no-speech') {
+            setIsTalking(false);
+        }
+      };
+    }
 
-  //   return () => {
-  //     if (recognitionRef.current) recognitionRef.current.stop();
-  //   };
-  // }, []);
+    return () => {
+      if (recognitionRef.current) recognitionRef.current.stop();
+    };
+  }, []);
 
   const handleTalk = () => {
     if (!recognitionRef.current) {
@@ -84,8 +101,8 @@ const AITutor = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           // CHANGE THIS LINE:
-          user_prompt: text,   // Backend expects 'user_prompt', not 'text'
-          language: language
+          text: text,   // Backend expects 'user_prompt', not 'text'
+          language: userData?.target_language || "Yoruba"
         })
       });
 
@@ -129,7 +146,7 @@ const AITutor = () => {
           },
           body: JSON.stringify({
             user_prompt: currentInput, 
-            language: "Yoruba" 
+            language: userData?.target_language || "Yoruba"
           })
         });
     
@@ -144,7 +161,7 @@ const AITutor = () => {
             id: Date.now() + 1, 
             sender: 'ai',       
             text: data.Translation, // The translation text
-            language: "Yoruba"
+            language: userData?.target_language || "Yoruba"
         };
 
         setMessages(prev => [...prev, aiMessage]);
@@ -164,10 +181,10 @@ const AITutor = () => {
         <div className="flex items-center gap-3">
             <h1 className="text-2xl font-bold">Scenario</h1>
             <span className="bg-green-900/30 text-green-400 text-xs font-bold px-2.5 py-1 rounded-full border border-green-800/50">
-                Yoruba
+                {userData?.target_language || "Yoruba"}
             </span>
         </div>
-        <p className="text-slate-400 text-sm font-medium">Interactive Roleplay • Beginner</p>
+        <p className="text-slate-400 text-sm font-medium">Interactive Roleplay • {userData?.proficiency_level || "Beginner"}</p>
       </div>
 
       {/* --- Chat Area --- */}

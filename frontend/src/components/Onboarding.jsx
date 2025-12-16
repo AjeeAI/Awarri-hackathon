@@ -43,7 +43,6 @@ const OnboardingView = () => {
             }
 
             // --- STEP 1: SAVE USER PROFILE ---
-            // We still use the local API for saving the user profile
             const response = await fetch(`${API_BASE_URL}/user/onboarding`, {
                 method: "POST",
                 headers: {
@@ -55,10 +54,8 @@ const OnboardingView = () => {
 
             const data = await response.json();
 
-            // Handle Errors (Ignore "Already Exists" 400 error)
             if (!response.ok) {
                 const isDuplicate = response.status === 400 && data.detail === 'Onboarding data already exists for this user.';
-                
                 if (!isDuplicate) {
                     if (response.status === 401) throw new Error("Unauthorized. Please login again.");
                     console.error("Backend Validation Error:", data);
@@ -69,24 +66,21 @@ const OnboardingView = () => {
             // --- STEP 2: GENERATE CURRICULUM ---
             setLoadingMessage("AI is crafting your personalized curriculum...");
             
-            // 1. Construct the Query Parameters
+            // Construct Query Params
             const queryParams = new URLSearchParams({
                 age: formData.age_range,
                 proficiency: formData.profeciency_level,
-                language: formData.target_language, 
-                // Add 'reason' if your backend needs motivations:
+                language: formData.target_language,
+                // Add this if your backend uses it for context
                 // reason: formData.motivations.join(", ") 
             }).toString();
 
-            // 2. Call the specific Cloudspace URL with Query Params appended
-            // Note: I preserved your double slash '//' just in case that is intentional for your proxy
             const curriculumResponse = await fetch(`https://8000-01kbncv6hstyfzvadn6zffk7f9.cloudspaces.litng.ai/api/curriculum?${queryParams}`, {
                 method: "POST",
                 headers: {
                     "content-type": "application/json",
                     "Authorization": `Bearer ${token}`
                 },
-                // Body is empty because data is now in the URL 'queryParams'
                 body: JSON.stringify({}), 
             });
 
@@ -96,10 +90,36 @@ const OnboardingView = () => {
                 throw new Error(err.detail?.[0]?.msg || err.detail || "Failed to generate curriculum.");
             }
 
-            const curriculumData = await curriculumResponse.json();
+            const responseData = await curriculumResponse.json();
+            let finalCurriculum = null;
+
+            // --- ROBUST PARSING LOGIC START ---
+            
+            // Case A: Backend returned clean JSON directly (Success)
+            if (responseData.overview && responseData.weeks) {
+                finalCurriculum = responseData;
+            } 
+            // Case B: Backend failed to parse but sent raw_text (Fallback)
+            // This handles the error you saw: { error: "Failed to parse...", raw_text: "..." }
+            else if (responseData.raw_text) {
+                console.warn("Backend failed strict parsing. Attempting frontend fallback...");
+                try {
+                    // Manually parse the raw string
+                    finalCurriculum = JSON.parse(responseData.raw_text);
+                } catch (e) {
+                    console.error("Manual parsing failed:", e);
+                    throw new Error("AI generated invalid data structure. Please try again.");
+                }
+            }
+            // Case C: Unexpected format
+            else {
+                console.error("Unexpected response structure:", responseData);
+                throw new Error("Received unexpected data format from AI.");
+            }
+            // --- ROBUST PARSING LOGIC END ---
 
             // --- STEP 3: STORE & NAVIGATE ---
-            localStorage.setItem("userCurriculum", JSON.stringify(curriculumData));
+            localStorage.setItem("userCurriculum", JSON.stringify(finalCurriculum));
             navigate('/dashboard');
 
         } catch (error) {
