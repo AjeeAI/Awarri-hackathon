@@ -4,10 +4,10 @@ import { Crown, Zap, Lock, CheckCircle, Shield } from 'lucide-react';
 const Leaderboard = () => {
   // Mock User State
   const userStats = {
-    currentLeague: 'Sapphire',
-    currentXP: 450,
-    requiredXP: 1000, // XP needed to reach next league
-    totalLifetimeXP: 2450
+    currentLeague: 'Bronze', // UPDATED: Set to the first league
+    currentXP: 150,          // OPTIONAL: Lowered XP to reflect a starter stats
+    requiredXP: 500,         // OPTIONAL: Lowered requirement for the first level
+    totalLifetimeXP: 150
   };
 
   // League Definitions
