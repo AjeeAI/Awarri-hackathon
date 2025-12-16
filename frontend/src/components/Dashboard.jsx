@@ -1,3 +1,5 @@
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { 
   Mic, Heart, Flame, Star, Zap, ChevronRight, Globe, CheckSquare, Music, Target, BookA, Headphones
 } from 'lucide-react';
@@ -5,14 +7,60 @@ import StatBadge from './StatBadge';
 import QuestItem from './QuestItem';
 import PracticeCard from './PracticeCard';
 
-const DashboardView = ({ onStart, userLang }) => (
-    
+const DashboardView = ({ userLang }) => { 
+    const navigate = useNavigate();
+
+    // 1. Existing User State
+    const [user, setUser] = useState(() => {
+        const stored = localStorage.getItem('user');
+        try {
+          return stored ? JSON.parse(stored) : { name: 'Guest', email: 'guest@example.com' };
+        } catch (e) {
+          return { name: 'Guest', email: 'guest@example.com' };
+        }
+    });
+
+    // 2. NEW: State for the Active Unit Card
+    const [activeModule, setActiveModule] = useState({
+        title: "Unit 1: Introduction",
+        description: "Start your journey with basic greetings and introductions.",
+        label: "Active Module"
+    });
+
+    // 3. NEW: Effect to load the active unit from localStorage
+    useEffect(() => {
+        try {
+            const storedJson = localStorage.getItem('userCurriculum');
+            if (storedJson) {
+                const data = JSON.parse(storedJson);
+                
+                // We assume the first week is the "Active" one for the dashboard summary
+                if (data.weeks && data.weeks.length > 0) {
+                    const currentWeek = data.weeks[0]; // Gets Week 1
+                    
+                    setActiveModule({
+                        title: `Unit ${currentWeek.week}: ${currentWeek.theme}`,
+                        description: currentWeek.objectives,
+                        label: "Active Module"
+                    });
+                }
+            }
+        } catch (error) {
+            console.error("Could not load dashboard curriculum data:", error);
+        }
+    }, []);
+
+    const handleStartLearning = () => {
+        navigate('/learn');
+    };
+
+    return (
     <div className="flex-1 overflow-y-auto min-h-screen p-4 md:p-8 bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
         <div className="w-full">
             <div className="flex justify-between items-end mb-8">
                 <div>
                     <h1 className="text-3xl font-extrabold text-slate-800 dark:text-white mb-2">
-                        E kaaro, John! 👋
+                        E kaaro, {user.name}! 👋
                     </h1>
                     <p className="text-slate-500 dark:text-slate-400">
                         Ready to continue your {userLang || 'Yoruba'} journey?
@@ -24,38 +72,40 @@ const DashboardView = ({ onStart, userLang }) => (
                     <StatBadge icon={<Heart size={20} />} value="5" label="Lives" color="text-red-500" bg="bg-red-50 dark:bg-red-900/20" />
                 </div>
             </div>
+
+            {/* --- ACTIVE MODULE CARD (Now Dynamic) --- */}
             <div className="bg-slate-900 dark:bg-slate-800 rounded-3xl p-8 text-white shadow-xl mb-10 relative overflow-hidden">
                 <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
                     <div>
                         <div className="inline-block px-3 py-1 bg-green-900/50 border border-green-700/50 rounded-lg text-green-400 text-xs font-bold mb-4 uppercase tracking-wider">
-                            Active Module
+                            {activeModule.label}
                         </div>
                         <h2 className="text-2xl md:text-3xl font-bold mb-2">
-                            Unit 1: Introduction
+                            {/* Uses the title from localStorage (e.g. Unit 1: Introduction...) */}
+                            {activeModule.title}
                         </h2>
                         <p className="text-slate-400 max-w-lg">
-                            Start your journey with basic greetings and introductions.
+                            {/* Uses the objectives from localStorage */}
+                            {activeModule.description}
                         </p>
                     </div>
-                    <button onClick={onStart} className="bg-green-600 text-white px-8 py-4 rounded-xl font-bold hover:bg-green-500 transition-colors shadow-lg flex items-center whitespace-nowrap">
+                    <button onClick={handleStartLearning} className="bg-green-600 text-white px-8 py-4 rounded-xl font-bold hover:bg-green-500 transition-colors shadow-lg flex items-center whitespace-nowrap">
                         Start Learning <ChevronRight size={20} className="ml-2" />
                     </button>
                 </div>
             </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
                     <div className="flex justify-between items-center mb-4">
                         <h3 className="font-bold text-lg flex items-center text-slate-800 dark:text-white">
                             <Star className="mr-2 text-yellow-500" size={20} /> Daily Quests
                         </h3>
-                        {/* <span className="text-xs font-bold text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded">
-                            12H LEFT
-                        </span> */}
                     </div>
                     <div className="space-y-4">
                         <QuestItem icon={<Mic size={20} className="text-blue-500" />} title="Speak 5 phrases" progress={0} total={5} />
                         <QuestItem icon={<CheckSquare size={20} className="text-green-500" />} title="Complete 1 Lesson" progress={0} total={1} />
-                        <QuestItem icon={<Target size={20} className="text-red-500" />} title="Score 90%" progress={0} total={90} unit="%" />
+                        <QuestItem icon={<Target size={20} className="text-red-500" />} title="Score 100%" progress={0} total={100} unit="%" />
                     </div>
                 </div>
                 <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm xl:col-span-2">
@@ -72,6 +122,7 @@ const DashboardView = ({ onStart, userLang }) => (
             </div>
         </div>
   </div>
-);
+  );
+}; 
 
-export default DashboardView
+export default DashboardView;

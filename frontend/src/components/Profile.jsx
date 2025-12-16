@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   Edit2, 
   Globe, 
@@ -11,6 +11,15 @@ import {
 } from 'lucide-react';
 
 const Profile = () => {
+  const token = localStorage.getItem("token");
+    const [user, setUser] = useState(() => {
+    const stored = localStorage.getItem('user');
+    try {
+      return stored ? JSON.parse(stored) : { name: 'Guest', email: 'guest@example.com' };
+    } catch (e) {
+      return { name: 'Guest', email: 'guest@example.com' };
+    }
+  });
   // Mock data to match the screenshot
   const stats = [
     { label: 'DAY STREAK', value: '0', icon: Flame, color: 'text-orange-500', borderColor: 'border-orange-500/20' },
@@ -49,6 +58,21 @@ const Profile = () => {
     },
   ];
 
+  const [data, setData] = useState(null);
+  const fetchData = async ()=> {
+    const response = await fetch("http://localhost:8000/api/user/data",
+      {method: "GET", headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}` 
+    }}
+    )
+    const responseData = await response.json();
+    setData(responseData);
+    console.log(responseData);
+  }
+  useEffect(()=> {
+    fetchData();
+  }, []);
   return (
     <div className="min-h-screen bg-[#0B0F19] text-white p-8 overflow-y-auto w-full font-sans">
       <div className="max-w-5xl mx-auto space-y-8">
@@ -58,7 +82,7 @@ const Profile = () => {
           <div className="flex items-center gap-6">
             <div className="relative">
               <div className="w-24 h-24 rounded-full bg-slate-700/50 border-4 border-[#0B0F19] flex items-center justify-center text-3xl font-bold text-slate-400">
-                JD
+                {user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2)}
               </div>
               <div className="absolute bottom-1 right-1 bg-[#0B0F19] rounded-full p-1">
                 <div className="bg-green-600 rounded-full p-1">
@@ -68,8 +92,8 @@ const Profile = () => {
             </div>
             
             <div>
-              <h1 className="text-2xl font-bold mb-1">John Doe</h1>
-              <p className="text-slate-400 text-sm mb-3">@naija_john • Joined September 2025</p>
+              <h1 className="text-2xl font-bold mb-1">{user.name}</h1>
+              <p className="text-slate-400 text-sm mb-3">@{user.name} • Joined {data?.created_at}</p>
               <div className="flex items-center gap-6 text-sm font-medium">
                 <div className="flex items-center gap-1.5">
                     <span className="text-white font-bold">12</span>

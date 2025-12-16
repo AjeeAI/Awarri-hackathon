@@ -1,137 +1,134 @@
 import React from 'react';
-import { Crown } from 'lucide-react';
+import { Crown, Zap, Lock, CheckCircle, Shield } from 'lucide-react';
 
 const Leaderboard = () => {
-  // Mock Data
-  const podium = [
-    { 
-      rank: 2, 
-      name: 'Fatima', 
-      xp: 980, 
-      initials: 'FA', 
-      color: 'bg-slate-600', 
-      border: 'border-slate-500',
-      size: 'w-20 h-20 text-xl',
-      height: 'mt-8' // Push down slightly
-    },
-    { 
-      rank: 1, 
-      name: 'Chinedu', 
-      xp: 1240, 
-      initials: 'CO', 
-      color: 'bg-yellow-600', 
-      border: 'border-yellow-400',
-      size: 'w-24 h-24 text-2xl', // Largest
-      height: 'mb-4', // Push up
-      icon: true // Has Crown
-    },
-    { 
-      rank: 3, 
-      name: 'Emeka', 
-      xp: 890, 
-      initials: 'EN', 
-      color: 'bg-orange-700', 
-      border: 'border-orange-600',
-      size: 'w-20 h-20 text-xl',
-      height: 'mt-8' // Push down slightly
-    },
+  // Mock User State
+  const userStats = {
+    currentLeague: 'Bronze', // UPDATED: Set to the first league
+    currentXP: 150,          // OPTIONAL: Lowered XP to reflect a starter stats
+    requiredXP: 500,         // OPTIONAL: Lowered requirement for the first level
+    totalLifetimeXP: 150
+  };
+
+  // League Definitions
+  const leagues = [
+    { id: 1, name: 'Bronze', color: 'text-orange-400', bg: 'bg-orange-500', border: 'border-orange-500' },
+    { id: 2, name: 'Silver', color: 'text-slate-300', bg: 'bg-slate-400', border: 'border-slate-400' },
+    { id: 3, name: 'Gold', color: 'text-yellow-400', bg: 'bg-yellow-500', border: 'border-yellow-500' },
+    { id: 4, name: 'Sapphire', color: 'text-blue-400', bg: 'bg-blue-500', border: 'border-blue-500' },
+    { id: 5, name: 'Diamond', color: 'text-cyan-300', bg: 'bg-cyan-400', border: 'border-cyan-400' },
+    { id: 6, name: 'Ruby', color: 'text-red-400', bg: 'bg-red-500', border: 'border-red-500' },
   ];
 
-  const list = [
-    { rank: 4, name: 'Sarah J.', xp: 750, initials: 'SJ' },
-    { rank: 5, name: 'Tunde B.', xp: 620, initials: 'TB' },
-    { rank: 6, name: 'John Doe (You)', xp: 450, initials: 'JD', isUser: true },
-  ];
+  // Find active index
+  const activeIndex = leagues.findIndex(l => l.name === userStats.currentLeague);
+  const percentage = Math.min(100, Math.round((userStats.currentXP / userStats.requiredXP) * 100));
 
   return (
-    <div className="min-h-screen bg-[#0B0F19] text-white p-8 w-full font-sans flex flex-col items-center">
+    <div className="min-h-screen bg-[#0B0F19] text-white p-4 md:p-8 w-full font-sans flex flex-col items-center">
       
       {/* --- Header --- */}
-      <div className="text-center mb-8">
-        <div className="flex justify-center mb-2">
-            <div className="w-12 h-12 rounded-full bg-slate-800/50 flex items-center justify-center border border-slate-700">
-                <Crown className="text-yellow-500" size={24} />
-            </div>
+      <div className="text-center mb-10">
+        <div className="inline-flex items-center justify-center p-3 bg-slate-800/50 rounded-2xl border border-slate-700 mb-4">
+            <Shield className="text-slate-400 mr-2" size={20} />
+            <span className="font-bold text-slate-200 tracking-wide uppercase text-sm">League Journey</span>
         </div>
-        <h1 className="text-2xl font-bold">Sapphire League</h1>
-        <p className="text-slate-400 text-sm mt-1">Top 10 advance to the Diamond League</p>
+        <h1 className="text-3xl font-extrabold mb-2">My Progress</h1>
+        <p className="text-slate-400 text-sm">
+            Collect XP to promote to the next league tier.
+        </p>
       </div>
 
-      {/* --- Main Card --- */}
-      <div className="w-full max-w-md bg-[#111625] rounded-3xl border border-slate-800/50 overflow-hidden shadow-2xl">
+      {/* --- Main Tracker Card --- */}
+      <div className="w-full max-w-xl bg-[#111625] rounded-3xl border border-slate-800/60 overflow-hidden shadow-2xl p-6 relative">
         
-        {/* Podium Section */}
-        <div className="flex justify-center items-end gap-4 p-8 pb-4">
-            {podium.map((user) => (
-                <div key={user.rank} className={`flex flex-col items-center ${user.height}`}>
-                    {/* Crown Icon for 1st Place */}
-                    {user.icon && (
-                        <Crown className="text-yellow-400 mb-2 drop-shadow-lg" size={28} fill="currentColor" />
-                    )}
-                    
-                    {/* Avatar Circle */}
-                    <div className={`${user.size} rounded-full ${user.color} border-4 ${user.border} flex items-center justify-center font-bold shadow-lg mb-3 relative`}>
-                        {user.initials}
-                        {/* Rank Badge */}
-                        <div className={`absolute -bottom-3 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                            user.rank === 1 ? 'bg-yellow-400 text-black' : 
-                            user.rank === 2 ? 'bg-slate-400 text-black' : 
-                            'bg-orange-400 text-black'
-                        }`}>
-                            {user.rank}
-                        </div>
-                    </div>
+        {/* Background Glow */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl -z-10"></div>
 
-                    <div className="text-center mt-2">
-                        <div className="font-bold text-lg">{user.name}</div>
-                        <div className={`font-bold text-sm ${
-                            user.rank === 1 ? 'text-yellow-400' : 'text-slate-400'
-                        }`}>
-                            {user.xp} XP
-                        </div>
-                    </div>
-                </div>
-            ))}
-        </div>
+        <div className="space-y-4 relative">
+            {/* Connecting Line */}
+            <div className="absolute left-[27px] top-6 bottom-6 w-1 bg-slate-800 rounded-full -z-10"></div>
 
-        {/* Ranking List */}
-        <div className="px-4 pb-6 space-y-2 mt-4">
-            {list.map((user) => (
-                <div 
-                    key={user.rank}
-                    className={`flex items-center justify-between p-4 rounded-2xl transition-all
-                        ${user.isUser 
-                            ? 'bg-slate-800/80 border border-slate-700 shadow-lg' // Highlight for User
-                            : 'hover:bg-slate-800/30 border border-transparent'
-                        }
-                    `}
-                >
-                    <div className="flex items-center gap-4">
-                        <span className={`font-bold w-6 text-center ${user.isUser ? 'text-green-400' : 'text-slate-500'}`}>
-                            {user.rank}
-                        </span>
-                        
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm
-                            ${user.isUser 
-                                ? 'bg-slate-700 text-green-400 border border-slate-600' 
-                                : 'bg-slate-800 text-slate-400'
+            {leagues.map((league, index) => {
+                const isCompleted = index < activeIndex;
+                const isActive = index === activeIndex;
+                const isLocked = index > activeIndex;
+
+                return (
+                    <div 
+                        key={league.id} 
+                        className={`relative flex gap-4 p-4 rounded-2xl border transition-all duration-300
+                            ${isActive 
+                                ? 'bg-slate-800/60 border-slate-700 shadow-lg scale-[1.02]' 
+                                : 'border-transparent opacity-90'
                             }
-                        `}>
-                            {user.initials}
+                            ${isLocked ? 'opacity-50 grayscale' : ''}
+                        `}
+                    >
+                        {/* Status Icon Column */}
+                        <div className="flex-shrink-0 flex items-start pt-1">
+                            <div className={`w-14 h-14 rounded-full flex items-center justify-center border-4 shadow-sm z-10 bg-[#111625]
+                                ${isActive ? `${league.border} ${league.color}` : 
+                                  isCompleted ? 'border-green-500 text-green-500' : 
+                                  'border-slate-700 text-slate-600'}
+                            `}>
+                                {isCompleted ? (
+                                    <CheckCircle size={24} fill="currentColor" className="text-[#111625]" />
+                                ) : isLocked ? (
+                                    <Lock size={20} />
+                                ) : (
+                                    <Crown size={24} fill="currentColor" className={league.color} />
+                                )}
+                            </div>
                         </div>
-                        
-                        <span className={`font-semibold ${user.isUser ? 'text-green-400' : 'text-white'}`}>
-                            {user.name}
-                        </span>
-                    </div>
-                    
-                    <span className="font-bold text-slate-400 text-sm">
-                        {user.xp} XP
-                    </span>
-                </div>
-            ))}
-        </div>
 
+                        {/* Content Column */}
+                        <div className="flex-1">
+                            <div className="flex justify-between items-center mb-1">
+                                <h3 className={`text-lg font-bold ${isActive ? 'text-white' : 'text-slate-400'}`}>
+                                    {league.name} League
+                                </h3>
+                                {isActive && (
+                                    <span className="text-xs font-bold text-slate-400 bg-slate-700/50 px-2 py-1 rounded">
+                                        Current
+                                    </span>
+                                )}
+                            </div>
+
+                            {isActive ? (
+                                <div className="mt-2 animate-in fade-in duration-500">
+                                    <div className="flex justify-between text-xs font-bold text-slate-400 mb-2">
+                                        <span>{userStats.currentXP} XP</span>
+                                        <span>{userStats.requiredXP} XP Goal</span>
+                                    </div>
+                                    <div className="h-4 w-full bg-slate-900 rounded-full overflow-hidden border border-slate-700/50 relative">
+                                        {/* Progress Bar */}
+                                        <div 
+                                            className={`h-full ${league.bg} transition-all duration-1000 ease-out relative`}
+                                            style={{ width: `${percentage}%` }}
+                                        >
+                                            {/* Shimmer Effect */}
+                                            <div className="absolute inset-0 bg-white/20 w-full h-full animate-pulse"></div>
+                                        </div>
+                                    </div>
+                                    <p className="text-xs text-slate-400 mt-3 font-medium">
+                                        You need <span className="text-white">{userStats.requiredXP - userStats.currentXP} more XP</span> to promote to {leagues[index + 1]?.name || 'Champion'} League.
+                                    </p>
+                                </div>
+                            ) : isCompleted ? (
+                                <div className="text-sm text-green-500 font-medium flex items-center mt-1">
+                                    Completed <CheckCircle size={14} className="ml-1" />
+                                </div>
+                            ) : (
+                                <div className="text-sm text-slate-600 font-medium mt-1">
+                                    Locked
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                );
+            })}
+        </div>
       </div>
     </div>
   );

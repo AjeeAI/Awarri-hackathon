@@ -3,9 +3,11 @@ import {
   Mic, 
   Send, 
   Volume2, 
+  Loader2 // Added Loader2 import
 } from 'lucide-react';
 
 const AITutor = () => {
+  const token = localStorage.getItem("token");
   const [inputText, setInputText] = useState('');
   const [isTalking, setIsTalking] = useState(false);
   const [isSending, setIsSending] = useState(false);
@@ -15,47 +17,63 @@ const AITutor = () => {
     {
       id: 1,
       sender: 'ai',
-      text: "Good morning. I have very beautiful lace. What do you want to buy?",
-      language: "Yoruba",
+      text: "Hello! I am a language translator. What would you like me to translate for you?",
+      language: `{userData?.target_language}`,
       translation: 'E kaaro o! Mo ni lace to rewa gan. Ki le fe ra?',
     }
   ]);
+
+  const [userData, setUserData] = useState(null);
+    const fetchData = async ()=> {
+      const response = await fetch("http://localhost:8000/api/user/data",
+        {method: "GET", headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}` 
+      }}
+      )
+      const responseData = await response.json();
+      setUserData(responseData);
+      console.log(responseData);
+    }
+    useEffect(()=> {
+      fetchData();
+    }, []);
 
   // Ref to hold the Speech Recognition instance
   const recognitionRef = useRef(null);
 
   // Initialize Speech Logic on Mount
-  // useEffect(() => {
-  //   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  useEffect(() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     
-  //   if (SpeechRecognition) {
-  //     recognitionRef.current = new SpeechRecognition();
-  //     recognitionRef.current.lang = 'en-US';
-  //     recognitionRef.current.continuous = true; 
-  //     recognitionRef.current.interimResults = true;
+    if (SpeechRecognition) {
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.lang = 'en-US';
+      recognitionRef.current.continuous = true; 
+      recognitionRef.current.interimResults = true;
 
-  //     recognitionRef.current.onresult = (event) => {
-  //       const transcript = Array.from(event.results)
-  //         .map(result => result[0].transcript)
-  //         .join('');
-  //       setInputText(transcript);
-  //     };
+      recognitionRef.current.onresult = (event) => {
+        const transcript = Array.from(event.results)
+          .map(result => result[0].transcript)
+          .join('');
+        setInputText(transcript);
+      };
 
-  //     recognitionRef.current.onend = () => {
-  //       setIsTalking(false);
-  //     };
+      recognitionRef.current.onend = () => {
+        setIsTalking(false);
+      };
 
-  //     recognitionRef.current.onerror = (event) => {
-  //       if (event.error !== 'no-speech') {
-  //           setIsTalking(false);
-  //       }
-  //     };
-  //   }
+      recognitionRef.current.onerror = (event) => {
+        if (event.error !== 'no-speech') {
+            setIsTalking(false);
+        }
+      };
+    }
 
-  //   return () => {
-  //     if (recognitionRef.current) recognitionRef.current.stop();
-  //   };
-  // }, []);
+    return () => {
+      if (recognitionRef.current) recognitionRef.current.stop();
+    };
+  }, []);
 
   const handleTalk = () => {
     if (!recognitionRef.current) {
@@ -66,7 +84,7 @@ const AITutor = () => {
     if (!isTalking) {
       try {
         // Mic is activated here
-        // recognitionRef.current.start();
+        recognitionRef.current.start();
         setIsTalking(true);
       } catch (err) {
         console.error("Mic already active");
@@ -84,8 +102,8 @@ const AITutor = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           // CHANGE THIS LINE:
-          user_prompt: text,   // Backend expects 'user_prompt', not 'text'
-          language: language
+          text: text,   // Backend expects 'user_prompt', not 'text'
+          language: userData?.target_language || "Yoruba"
         })
       });
 
@@ -129,7 +147,7 @@ const AITutor = () => {
           },
           body: JSON.stringify({
             user_prompt: currentInput, 
-            language: "Yoruba" 
+            language: userData?.target_language || "Yoruba"
           })
         });
     
@@ -144,7 +162,7 @@ const AITutor = () => {
             id: Date.now() + 1, 
             sender: 'ai',       
             text: data.Translation, // The translation text
-            language: "Yoruba"
+            language: userData?.target_language || "Yoruba"
         };
 
         setMessages(prev => [...prev, aiMessage]);
@@ -164,10 +182,10 @@ const AITutor = () => {
         <div className="flex items-center gap-3">
             <h1 className="text-2xl font-bold">Scenario</h1>
             <span className="bg-green-900/30 text-green-400 text-xs font-bold px-2.5 py-1 rounded-full border border-green-800/50">
-                Yoruba
+                {userData?.target_language || "Yoruba"}
             </span>
         </div>
-        <p className="text-slate-400 text-sm font-medium">Interactive Roleplay • Beginner</p>
+        <p className="text-slate-400 text-sm font-medium">Interactive Roleplay • {userData?.proficiency_level || "Beginner"}</p>
       </div>
 
       {/* --- Chat Area --- */}
@@ -200,6 +218,16 @@ const AITutor = () => {
                 )}
             </div>
         ))}
+        
+        {/* --- Loader Message --- */}
+        {isSending && (
+            <div className="flex flex-col max-w-2xl mr-auto items-start">
+                <div className="p-5 rounded-2xl relative shadow-lg bg-[#1E293B] border border-slate-800 rounded-bl-sm text-slate-100">
+                    {/* <Loader2 className="animate-spin text-green-500" size={24} /> */}
+                    <svg fill="white" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><defs><filter id="spinner-gF00"><feGaussianBlur in="SourceGraphic" stdDeviation="1.5" result="y"/><feColorMatrix in="y" mode="matrix" values="1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 18 -7" result="z"/><feBlend in="SourceGraphic" in2="z"/></filter></defs><g filter="url(#spinner-gF00)"><circle cx="4" cy="12" r="3"><animate attributeName="cx" calcMode="spline" dur="0.75s" values="4;9;4" keySplines=".56,.52,.17,.98;.56,.52,.17,.98" repeatCount="indefinite"/><animate attributeName="r" calcMode="spline" dur="0.75s" values="3;8;3" keySplines=".56,.52,.17,.98;.56,.52,.17,.98" repeatCount="indefinite"/></circle><circle cx="15" cy="12" r="8"><animate attributeName="cx" calcMode="spline" dur="0.75s" values="15;20;15" keySplines=".56,.52,.17,.98;.56,.52,.17,.98" repeatCount="indefinite"/><animate attributeName="r" calcMode="spline" dur="0.75s" values="8;3;8" keySplines=".56,.52,.17,.98;.56,.52,.17,.98" repeatCount="indefinite"/></circle></g></svg>
+                </div>
+            </div>
+        )}
       </div>
 
       {/* --- Input Area --- */}

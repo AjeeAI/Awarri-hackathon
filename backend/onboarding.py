@@ -24,38 +24,43 @@ class OnboardingData(BaseModel):
 
 @router.post("/user/onboarding")
 def onboarding(data: OnboardingData, user: dict = Depends(verify_token)):
-    user_id = user.get("id")
+    try:
+        user_id = user.get("id")
 
-    # check the DB to ensure user account is real
-    check_user_query = text("SELECT id FROM users WHERE id = :user_id")
-    user_exists = db.execute(check_user_query, {"user_id": user_id}).fetchone()
+        # check the DB to ensure user account is real
+        check_user_query = text("SELECT id FROM users WHERE id = :user_id")
+        user_exists = db.execute(check_user_query, {"user_id": user_id}).fetchone()
 
-    if not user_exists:
-        raise HTTPException(status_code=404, detail="User not found.")
-    
-    # Prevent duplicate onboarding entries
-    check_onboarding_query = text("SELECT id FROM onboarding WHERE user_id = :user_id")
-    onboarding_exists = db.execute(check_onboarding_query, {"user_id": user_id}).fetchone()
+        if not user_exists:
+            raise HTTPException(status_code=404, detail="User not found.")
+        
+        # Prevent duplicate onboarding entries
+        check_onboarding_query = text("SELECT id FROM onboarding WHERE user_id = :user_id")
+        onboarding_exists = db.execute(check_onboarding_query, {"user_id": user_id}).fetchone()
 
-    if onboarding_exists:
-        raise HTTPException(status_code=400, detail="Onboarding data already exists for this user.")
-    
-    insert_query = text("""
-        INSERT INTO onboarding(user_id, age_range, is_guardian, gender, target_language, motivations, learning_path, proficiency_level)
-        VALUES (:user_id, :age_range, :is_guardian, :gender, :target_language, :motivations, :learning_path, :proficiency_level)
-    """)
-    motivations_json = json.dumps(data.motivations)
+        if onboarding_exists:
+            raise HTTPException(status_code=400, detail="Onboarding data already exists for this user.")
+        
+        insert_query = text("""
+            INSERT INTO onboarding(user_id, age_range, is_guardian, gender, target_language, motivations, learning_path, proficiency_level)
+            VALUES (:user_id, :age_range, :is_guardian, :gender, :target_language, :motivations, :learning_path, :proficiency_level)
+        """)
+        motivations_json = json.dumps(data.motivations)
 
-    db.execute(insert_query, {
-        "user_id": user_id,
-        "age_range": data.age_range,
-        "is_guardian": data.is_guardian,
-        "gender": data.gender,
-        "target_language": data.target_language,
-        "motivations": motivations_json,
-        "learning_path": data.learning_path,
-        "proficiency_level": data.profeciency_level
-    })
+        db.execute(insert_query, {
+            "user_id": user_id,
+            "age_range": data.age_range,
+            "is_guardian": data.is_guardian,
+            "gender": data.gender,
+            "target_language": data.target_language,
+            "motivations": motivations_json,
+            "learning_path": data.learning_path,
+            "proficiency_level": data.profeciency_level
+        })
 
-    db.commit()
-    return {"message": "Onboarding data saved successfully."}
+        db.commit()
+        return {"message": "Onboarding data saved successfully."}
+
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Onboarding failed: {str(e)}")
