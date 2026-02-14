@@ -1,5 +1,5 @@
 from sqlalchemy import create_engine, text
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, declarative_base, Session
 from dotenv import load_dotenv
 from sqlalchemy import text
 import pymysql
@@ -9,12 +9,27 @@ load_dotenv()
 
 db_url = f"mysql+pymysql://{os.getenv('dbuser')}:{os.getenv('dbpassword')}@{os.getenv('dbhost')}:{os.getenv('dbport')}/{os.getenv('dbname')}"
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# 2. Build the full path to the certificate
+ssl_cert_path = os.path.join(BASE_DIR, "isrgrootx1.pem")
+
+
 engine = create_engine(
-    db_url
+    db_url,
+    connect_args={
+        "ssl": {
+            "ca": ssl_cert_path
+        }
+    }
 )
 
-session = sessionmaker(bind=engine)
-db = session()
+
+
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Base = declarative_base()
+
+db = SessionLocal()
 create_users_table = text("""
 CREATE TABLE IF NOT EXISTS users(
     id int AUTO_INCREMENT PRIMARY KEY,
